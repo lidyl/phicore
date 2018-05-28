@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# CeCILL-B license LIDYL, CEA
 
 from setuptools import setup, find_packages
 import phicore

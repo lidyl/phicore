@@ -1,3 +1,5 @@
+# CeCILL-B license LIDYL, CEA
+
 import os
 import time
 import warnings
@@ -7,8 +9,6 @@ import tables as tb
 import xarray as xr
 
 __fileformatversion__ = 2
-
-warnings.simplefilter('always', DeprecationWarning)
 
 
 class PhiDataFile(object):

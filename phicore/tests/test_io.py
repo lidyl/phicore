@@ -1,3 +1,5 @@
+# CeCILL-B license LIDYL, CEA
+
 import os
 import shutil
 import warnings
