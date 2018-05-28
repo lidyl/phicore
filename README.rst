@@ -1,6 +1,8 @@
 phicore
 =======
 
+|travis| |appveyor|
+
 phicore is a Python 3.5+ package designed to save and organize spatio-temporal laser metrology data.
 
 
@@ -74,3 +76,9 @@ Copyright LIDYL CEA 2018-present, released under the CeCIL-B license (BSD-like).
 
 
 See `LICENSE <./LICENSE>`_ file for more information.
+
+.. |travis| image:: https://travis-ci.org/lidyl/phicore.svg?branch=master
+    :target: https://travis-ci.org/lidyl/phicore
+
+.. |appveyor| image:: https://ci.appveyor.com/api/projects/status/github/lidyl/phicore?svg=true
+    :target: https://ci.appveyor.com/project/ajeandet/phicore/branch/master

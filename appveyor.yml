@@ -1,0 +1,24 @@
+build: false
+
+environment:
+
+  matrix:
+    - PYTHON_VERSION: "3.6.x"
+      PYTHON_ARCH: "64"
+      MINICONDA: C:\Miniconda36-x64
+      REQUIREMENTS: "numpy h5py pytables xarray"
+
+
+init:
+  - "ECHO %PYTHON_VERSION% %MINICONDA%"
+
+install:
+  - "set PATH=%MINICONDA%;%MINICONDA%\\Scripts;%PATH%"
+  - conda config --set always_yes yes --set changeps1 no
+  - conda install %REQUIREMENTS%
+  - pip install pytest-cov
+  - pip install -e .
+
+
+test_script:
+  - pytest -s --cov=phicore phicore/

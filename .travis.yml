@@ -1,0 +1,42 @@
+os: linux
+language: python
+sudo: false
+
+matrix:
+  include:
+    - python: 3.5
+      env: REQUIREMENTS="numpy=1.10 h5py=2.7 pytables=3.4 xarray=0.9 nomkl flake8"  RUN_FLAKE8=true
+    - python: 3.6
+      env: REQUIREMENTS="numpy==1.14.3 h5py pytables xarray"
+    - language: generic
+      os: osx
+      python: 3.6
+      env: PYTHON_VERSION="3.6" REQUIREMENTS="numpy h5py pytables xarray"
+
+install:
+  - |
+     if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+        curl -s -o miniconda.sh https://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh
+     else
+        curl -s -o miniconda.sh https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
+     fi
+     bash miniconda.sh -b -p $HOME/miniconda && rm miniconda.sh
+     export PATH="$HOME/miniconda/bin:$PATH"
+     hash -r
+     conda update conda -y
+     conda create -y -n phicore-env ${REQUIREMENTS}  pytest-cov pytest python=${PYTHON_VERSION}
+     source activate phicore-env
+     pip install pytest-cov
+     pip install -e .
+
+script:
+  - source activate phicore-env
+  - pytest -s --doctest-modules --cov=phicore phicore/
+  - |
+      if [[ "${RUN_FLAKE8}" == true ]]; then
+         flake8 phicore/
+      fi
+
+cache:
+  - directories:
+    - $HOME/.cache/pip
