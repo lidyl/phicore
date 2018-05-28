@@ -58,7 +58,7 @@ Unit tests can be run with,
 License
 -------
 
-Copyright LIDYL CEA 2018-present, released under the CECIL-B license (BSD-like).
+Copyright LIDYL CEA 2018-present, released under the CeCIL-B license (BSD-like).
 
 
 See `LICENSE <./LICENSE>`_ file for more information.
