@@ -29,7 +29,7 @@ alternatively to use pip,
 
 .. code::
 
-   pip install --file requirements.txt
+   pip install -r requirements.txt
 
 Installing phicore
 ^^^^^^^^^^^^^^^^^^
@@ -72,7 +72,7 @@ Unit tests can be run with,
 License
 -------
 
-Copyright LIDYL CEA 2018-present, released under the CeCIL-B license (BSD-like).
+Copyright LIDYL CEA 2018-present, released under the CeCILL-B license (BSD-like).
 
 
 See `LICENSE <./LICENSE>`_ file for more information.
