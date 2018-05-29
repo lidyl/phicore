@@ -18,9 +18,19 @@ jobs:
               pip install -r doc/requirements.txt
               cd doc/
               make html
+      - add_ssh_keys:
+          fingerprints:
+            - "10:4e:40:e2:83:06:86:e7:f1:6b:70:8b:a0:e1:08:af"
       - run:
           command: |
               if [[ "${CIRCLE_BRANCH}" =~ ^master$|^[0-9]+\.[0-9]+\.X$ ]]; then
+                  # By default the read-only Circle CI key appears to be used.
+                  # We unload all active SSH keys, and use the one below instead.
+                  # TODO: there should be a simpler way to achieve this
+                  ssh-add -D
+                  rm -f ~/.ssh/config
+                  ssh-add ~/.ssh/id_rsa_*
+
                   git clone --depth 1 "git@github.com:lidyl/lidyl.github.io.git" /tmp/lidyl.github.io
                   rm -r /tmp/lidyl.github.io/phicore/doc/stable/
                   cp -r doc/_build/html /tmp/lidyl.github.io/phicore/doc/stable
