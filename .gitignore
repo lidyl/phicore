@@ -3,3 +3,7 @@
 __pycache__/
 *.egg-info/
 .pytest_cache/
+doc/_build/
+doc/examples/
+doc/generated
+doc/generated_gallery

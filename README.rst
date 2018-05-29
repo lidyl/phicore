@@ -5,6 +5,7 @@ phicore
 
 phicore is a Python 3.5+ package designed to save and organize spatio-temporal laser metrology data.
 
+See the documentation for more details https://lidyl.github.io/phicore/doc/stable/
 
 Installation
 ------------
@@ -53,11 +54,6 @@ io.PhiDataFile
     file_inst = PhiDataFile(fullpath, mode="r")
     X = file_inst.read_xarray('/data/Sxyw')
 
-
-File format and xarray format
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-See `API.md <./API.md>`_.
 
 Running unit tests
 ^^^^^^^^^^^^^^^^^^

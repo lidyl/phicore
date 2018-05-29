@@ -1,0 +1,43 @@
+version: 2
+
+jobs:
+  build:
+    docker:
+      - image: continuumio/miniconda
+    steps:
+      - checkout
+      - run:
+          command: |
+              apt-get install -y make
+              conda create -y -n phicore-env --file requirements.txt nomkl python=3.6
+              source activate phicore-env
+              pip install -e .
+      - run:
+          command: |
+              source activate phicore-env
+              pip install -r doc/requirements.txt
+              cd doc/
+              make html
+      - run:
+          command: |
+              if [[ "${CIRCLE_BRANCH}" =~ ^master$|^[0-9]+\.[0-9]+\.X$ ]]; then
+                  git clone --depth 1 "git@github.com:lidyl/lidyl.github.io.git" /tmp/lidyl.github.io
+                  rm -r /tmp/lidyl.github.io/phicore/doc/stable/
+                  cp -r doc/_build/html /tmp/lidyl.github.io/phicore/doc/stable
+                  cd /tmp/lidyl.github.io/
+                  git config --global user.email "none@lidyl.io"
+                  git config --global user.name "lidyl"
+                  git config --global push.default matching
+                  git add -f phicore/doc/stable/
+                  git commit -m "Update documentation"
+                  git push
+              fi
+      - store_artifacts:
+          path: doc/_build/html
+          destination: doc
+
+workflows:
+  version: 2
+  build-doc-and-deploy:
+    jobs:
+      - build
