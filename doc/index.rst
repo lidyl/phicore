@@ -14,5 +14,7 @@ phicore is a Python 3.5+ package designed to save and organize spatio-temporal l
    
    installation
    hdf5_file_format
+   examples/index
    api
+   contributing
    release-notes

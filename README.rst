@@ -42,29 +42,6 @@ Phicore can be installed with,
    pip install -e .
 
 
-Documentation
--------------
-io.PhiDataFile
-^^^^^^^^^^^^^^
-
-.. code::python
-
-    from phicore.io import PhiDataFile
-
-    file_inst = PhiDataFile(fullpath, mode="r")
-    X = file_inst.read_xarray('/data/Sxyw')
-
-
-Running unit tests
-^^^^^^^^^^^^^^^^^^
-
-Unit tests can be run with,
-
-.. code::
-
-    py.test -sv
-
-
 License
 -------
 

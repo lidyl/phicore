@@ -7,3 +7,4 @@ doc/_build/
 doc/examples/
 doc/generated
 doc/generated_gallery
+*.h5
