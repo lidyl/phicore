@@ -44,4 +44,3 @@ fh = PhiDataFile('test_file.h5', 'r')
 X_out = fh.read_xarray('/data/X')
 
 print(X)
-
