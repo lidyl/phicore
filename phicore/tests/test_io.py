@@ -46,7 +46,7 @@ def example_dataset(tmpdir_factory, new_xarray):
     # clean up the temporary folder
     try:
         shutil.rmtree(str(tmp_dir))
-    except PermissionError:
+    except PermissionError:  # noqa: F821
         warnings.warn('PermissionError: Failed to remove temporary file '
                       '%s on Windows' % str(tmp_dir))
 
