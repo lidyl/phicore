@@ -4,9 +4,6 @@ import os
 import time
 import warnings
 
-import h5py
-import tables as tb
-import xarray as xr
 
 __fileformatversion__ = 2
 
@@ -78,8 +75,10 @@ class PhiDataFile(object):
                           .format(self.fullpath))
 
         if backend == 'h5py':
+            import h5py
             return h5py.File(self.fullpath, mode)
         elif backend == 'pytables':
+            import tables as tb
             return tb.open_file(self.fullpath, mode=mode, filters=filters)
         else:
             raise ValueError("Wrong backend {}".format(backend))
@@ -92,6 +91,7 @@ class PhiDataFile(object):
 
     def _create_file(self):
         """Initialize basic file structure"""
+        import h5py
         with h5py.File(self.fullpath, 'w') as f:
             f.create_group('data')
             f.create_group('scales')
@@ -133,6 +133,7 @@ class PhiDataFile(object):
           the backend to use
         """
         if backend == 'pytables':
+            import tables as tb
             filters = tb.Filters(fletcher32=fletcher32, complib=complib,
                                  complevel=complevel)
             with self.open('a', backend='pytables') as fh:
@@ -295,6 +296,8 @@ class PhiDataFile(object):
             arrays. chunks=() loads the dataset with dask using a single
             chunk for all arrays.
         """
+        import xarray as xr
+
         dataset_name = os.path.basename(location)
         if not dataset_name:
             raise ValueError(('Not a valid path {} inside hdf5 for loading '
