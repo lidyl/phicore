@@ -45,9 +45,21 @@ jobs:
       - store_artifacts:
           path: doc/_build/html
           destination: doc
+  lint:
+    docker:
+      - image: continuumio/miniconda
+    steps:
+      - checkout
+      - run:
+           name: dependencies
+           command: pip install flake8
+      - run:
+           name: lint
+           command: flake8
 
 workflows:
   version: 2
   build-doc-and-deploy:
     jobs:
       - build
+      - lint

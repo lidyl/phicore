@@ -23,9 +23,9 @@ import sys
 sys.path.insert(0, os.path.abspath('../'))
 sys.path.insert(0, os.path.abspath('sphinxext'))
 
-import phicore
+import phicore  # noqa: E402
 
-from github_link import make_linkcode_resolve
+from github_link import make_linkcode_resolve  # noqa: E402
 
 # -- General configuration ------------------------------------------------
 
@@ -67,7 +67,7 @@ sphinx_gallery_conf = {
 
     # Modules for which function level galleries are created.
     'doc_module': ('neurtu'),
-    'filename_pattern': '.*\.py'
+    'filename_pattern': r'.*\.py'
 }
 
 # Add any paths that contain templates here, relative to this directory.
