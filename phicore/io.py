@@ -1,7 +1,6 @@
 # CeCILL-B license LIDYL, CEA
 
 import os
-import sys
 import time
 import warnings
 import operator
@@ -249,6 +248,8 @@ class PhiDataFile(object):
         backend : str
           the backend to use
         """
+        import numpy as np
+
         if data.name is not None:
             dataset_name = data.name
         else:
@@ -280,6 +281,12 @@ class PhiDataFile(object):
             for key, value in data.attrs.items():
                 if key in ['name', 'scale_units']:
                     continue
+
+                if (isinstance(value, (np.ndarray, np.str_))
+                        and value.dtype.kind == 'U'
+                        and value.ndim == 0):
+                    value = str(value)
+
                 fh[location].attrs[key] = value
 
     def read_xarray(self, location, index=(), chunks=(),
@@ -320,11 +327,6 @@ class PhiDataFile(object):
 
         if backend not in ['pytables', 'h5py']:
             raise ValueError('unknown backend {}'.format(backend))
-
-        if backend == 'pytables' and sys.version_info < (3, 6):
-            raise ValueError("backend='pytables' is not supported on {} "
-                             "either use another backend or upgrade to "
-                             "python 3.6+".format(".".join(sys.version_info)))
 
         def _h5_loader(fh, location):
             if backend == 'pytables':

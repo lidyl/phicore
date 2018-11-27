@@ -2,7 +2,6 @@
 
 import os
 import shutil
-import sys
 
 import warnings
 
@@ -79,10 +78,6 @@ def test_io_xarray(tmpdir_factory, new_xarray, backend, complevel):
         assert h5_filters.fletcher32
         assert h5_filters.complevel == complevel
 
-    if backend == 'pytables' and sys.version_info < (3, 6):
-        # pytables backend in read_xarray is not supported in Python <3.6
-        backend = 'h5py'
-
     data_inst_2 = file_inst_2.read_xarray('/data/' + data_name,
                                           backend=backend)
 
@@ -101,12 +96,9 @@ def test_io_xarray_preserves_attrs(tmpdir_factory, new_xarray, backend):
 
     file_name = "test_file.h5"
 
-    if backend == 'pytables' and sys.version_info < (3, 6):
-        pytest.skip('read_xarray(..., backend="pytables") is not implemented '
-                    'for Python <3.6')
-
     X = new_xarray
     X.attrs['a'] = 'test'
+    X.attrs['c'] = np.array('üy')
     file_inst = PhiDataFile(str(tmp_dir / file_name), "w")
     file_inst.write_xarray(X, backend=backend)
 
@@ -123,10 +115,6 @@ def test_io_xarray_preserves_attrs(tmpdir_factory, new_xarray, backend):
 @pytest.mark.parametrize('backend', ['pytables', 'h5py'])
 def test_io_dask_support(tmpdir_factory, example_dataset, backend):
     da = pytest.importorskip('dask.array')
-
-    if backend == 'pytables' and sys.version_info < (3, 6):
-        pytest.skip('read_xarray(..., backend="pytables") is not implemented '
-                    'for Python <3.6')
 
     fh = PhiDataFile(example_dataset)
 
