@@ -1,8 +1,10 @@
 # CeCILL-B license LIDYL, CEA
 
 import os
+import sys
 import time
 import warnings
+import operator
 
 
 __fileformatversion__ = 2
@@ -260,9 +262,11 @@ class PhiDataFile(object):
             raise ValueError(('Not a valid path {} inside hdf5 for saving '
                               'xarrays. Must be of the form '
                               '/data/<array_name>.').format(location))
+        # Create the dataset with the corresponding backend (and compression)
         self.create_dataset(location, data=data.values, chunks=chunks,
                             backend=backend, complib=complib,
                             complevel=complevel, **args)
+        # Always use h5py to set attributes and scales (to use a simpler API)
         with self.open('a') as fh:
             fh[location].attrs['name'] = dataset_name
             fh[location].attrs['scales'] = [el.encode('utf8')
@@ -278,7 +282,8 @@ class PhiDataFile(object):
                     continue
                 fh[location].attrs[key] = value
 
-    def read_xarray(self, location, index=(), chunks=()):
+    def read_xarray(self, location, index=(), chunks=(),
+                    backend='h5py'):
         """ Read an xarray from hdf5
 
         Only one of ``index``, ``chunks`` can be provided at a time.
@@ -295,6 +300,10 @@ class PhiDataFile(object):
             If chunks is provided, it is used to load the new dataset into dask
             arrays. chunks=() loads the dataset with dask using a single
             chunk for all arrays.
+        backend : str
+          the backend to use, one of {'hdf5', 'pytables'}
+
+          .. note:: Only supported for Python 3.6+
         """
         import xarray as xr
 
@@ -307,9 +316,38 @@ class PhiDataFile(object):
             raise ValueError('index and chunks parameters cannot '
                              'be used together!')
 
-        fh = self.open('r')
+        fh = self.open('r', backend=backend)
 
-        X_raw = fh[location]
+        if backend not in ['pytables', 'h5py']:
+            raise ValueError('unknown backend {}'.format(backend))
+
+        if backend == 'pytables' and sys.version_info < (3, 6):
+            raise ValueError("backend='pytables' is not supported on {} "
+                             "either use another backend or upgrade to "
+                             "python 3.6+".format(".".join(sys.version_info)))
+
+        def _h5_loader(fh, location):
+            if backend == 'pytables':
+                location = ('root.' + location.strip('/')).replace('/', '.')
+
+                return operator.attrgetter(location)(fh)
+            elif backend == 'h5py':
+                return fh[location]
+            else:
+                raise ValueError
+
+        def _h5_attr_iter(x):
+            if backend == 'pytables':
+                return {key: getattr(x, key)
+                        for key in [name for name in dir(x)
+                                    if not name.startswith('_')]}.items()
+            elif backend == 'h5py':
+                return x.items()
+            else:
+                raise ValueError
+
+        X_raw = _h5_loader(fh, location)
+
         if chunks:
             try:
                 import dask.array as da
@@ -322,14 +360,14 @@ class PhiDataFile(object):
         else:
             X_raw = X_raw[:]  # load data in memory
         scale_names = [el.decode('utf-8')
-                       for el in fh[location].attrs['scales']]
+                       for el in _h5_loader(fh, location).attrs['scales']]
 
         coords = {}
         scale_units = {}
 
         for idx, name in enumerate(scale_names):
             coord_path = '/scales/' + '_'.join([dataset_name, name])
-            coord_val = fh[coord_path]
+            coord_val = _h5_loader(fh, coord_path)
             if index:
                 local_index = index[idx]
                 coords[name] = coord_val[local_index]
@@ -342,16 +380,20 @@ class PhiDataFile(object):
                  'scale_units': scale_units}
 
         # save optional attributes
-        for key, value in fh[location].attrs.items():
+        for key, value in _h5_attr_iter(_h5_loader(fh, location).attrs):
             if key in ['name', 'scales']:
                 continue
             if key.isupper():
                 # skip system attributes in PyTables
                 continue
-            attrs[key] = fh[location].attrs[key]
+            attrs[key] = value
 
         if not chunks:
             fh.close()
+            self._fh = None
+        else:
+            # create an attribute that we could close later if needed
+            self._fh = fh
 
         return xr.DataArray(X_raw, coords=coords, dims=scale_names,
                             attrs=attrs, name=dataset_name)
