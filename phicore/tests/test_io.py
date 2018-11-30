@@ -6,6 +6,7 @@ import shutil
 import warnings
 
 import numpy as np
+from numpy.testing import assert_array_equal
 import xarray as xr
 import pytest
 
@@ -136,4 +137,39 @@ def test_io_dask_support(tmpdir_factory, example_dataset, backend):
     assert fh._fh is not None
     # reading an xarray in dask mode (when chunks are provided) does not
     # close the file handler. Her we do it manually.
+    fh._fh.close()
+
+
+@pytest.mark.parametrize('backend', ['pytables', 'h5py'])
+def test_read_xarray_mmap(tmpdir_factory, example_dataset, backend):
+    fh = PhiDataFile(example_dataset)
+
+    args = {'location': '/data/test_data', 'backend': backend}
+
+    X = fh.read_xarray(**args)
+
+    assert isinstance(X.values, np.ndarray)
+
+    with pytest.raises(ValueError,
+                       match='mmap=True is not compatible with'):
+        fh.read_xarray(chunks=(4, 2), mmap=True, **args)
+
+    with pytest.raises(ValueError,
+                       match='mmap=True is not compatible with'):
+        fh.read_xarray(index=(4, 2), mmap=True, **args)
+
+    X_m = fh.read_xarray(mmap=True, **args)
+
+    for attr in ['coords', 'dims', 'name', 'values']:
+        assert hasattr(X_m, attr)
+
+    assert not isinstance(X_m, np.ndarray)
+
+    assert_array_equal(X_m.values[:], X.values)
+    assert X_m.name == X.name
+    assert X_m.dims == X.dims
+
+    for key in X.coords:
+        assert_array_equal(X_m.coords[key], X.coords[key])
+
     fh._fh.close()

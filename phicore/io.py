@@ -5,6 +5,8 @@ import time
 import warnings
 import operator
 
+from collections import namedtuple
+
 
 __fileformatversion__ = 2
 
@@ -290,7 +292,7 @@ class PhiDataFile(object):
                 fh[location].attrs[key] = value
 
     def read_xarray(self, location, index=(), chunks=(),
-                    backend='h5py'):
+                    backend='h5py', mmap=False):
         """ Read an xarray from hdf5
 
         Only one of ``index``, ``chunks`` can be provided at a time.
@@ -299,18 +301,28 @@ class PhiDataFile(object):
         ----------
         location : str
           path in the hdf5 file
-
         index : tuple
           tuple of slices specifying the subset of the dataset to load
-
         chunks : tuple, optional
             If chunks is provided, it is used to load the new dataset into dask
             arrays. chunks=() loads the dataset with dask using a single
             chunk for all arrays.
         backend : str
           the backend to use, one of {'hdf5', 'pytables'}
+        mmap : bool, default=False
+          if True return a memory map of the data. To obtain
+          a numpy array it is sufficient to slice or perform calculations
+          with the obtained object.
 
-          .. note:: Only supported for Python 3.6+
+          .. note:: this option is not compatible with index or chunks,
+          and returns a namedtuple (with the idential fields) instead
+          of a real DataArray.
+
+        Returns
+        -------
+        X : {xarray.DataArray, namedtuple}
+          returns an xarray.DataArray if mmap=False and a namedtuple
+          with the same fields otherwise
         """
         import xarray as xr
 
@@ -323,10 +335,14 @@ class PhiDataFile(object):
             raise ValueError('index and chunks parameters cannot '
                              'be used together!')
 
-        fh = self.open('r', backend=backend)
+        if mmap and (index or chunks):
+            raise ValueError('mmap=True is not compatible with providing '
+                             'index or chunks!')
 
         if backend not in ['pytables', 'h5py']:
             raise ValueError('unknown backend {}'.format(backend))
+
+        fh = self.open('r', backend=backend)
 
         def _h5_loader(fh, location):
             if backend == 'pytables':
@@ -359,7 +375,7 @@ class PhiDataFile(object):
             X_raw = da.from_array(X_raw, chunks=chunks)
         elif index:
             X_raw = X_raw[index]
-        else:
+        elif not mmap:
             X_raw = X_raw[:]  # load data in memory
         scale_names = [el.decode('utf-8')
                        for el in _h5_loader(fh, location).attrs['scales']]
@@ -390,12 +406,19 @@ class PhiDataFile(object):
                 continue
             attrs[key] = value
 
-        if not chunks:
+        if not (chunks or mmap):
             fh.close()
             self._fh = None
         else:
             # create an attribute that we could close later if needed
             self._fh = fh
 
-        return xr.DataArray(X_raw, coords=coords, dims=scale_names,
-                            attrs=attrs, name=dataset_name)
+        if mmap:
+            # xarray.DataArray does not support mmaps, so we
+            # return a named tuple instead with the same fields
+            nt = namedtuple('DataArrayMmap',
+                            ('values', 'coords', 'dims', 'attrs', 'name'))
+            return nt(X_raw, coords, tuple(scale_names), attrs, dataset_name)
+        else:
+            return xr.DataArray(X_raw, coords=coords, dims=scale_names,
+                                attrs=attrs, name=dataset_name)
