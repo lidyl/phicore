@@ -1,7 +1,4 @@
 # CeCILL-B license LIDYL, CEA
-import warnings
-
-import numpy as np
 
 # A few utils functions copied from sklearn.utils
 
@@ -75,8 +72,6 @@ def get_chunk_n_rows(row_bytes, working_memory, max_n_rows=None):
     if max_n_rows is not None:
         chunk_n_rows = min(chunk_n_rows, max_n_rows)
     if chunk_n_rows < 1:
-        warnings.warn('Could not adhere to working_memory config. '
-                      'Currently %.0fMiB, %.0fMiB required.' %
-                      (working_memory, np.ceil(row_bytes * 2 ** -20)))
+        # Could not adhere to working_memory config.
         chunk_n_rows = 1
     return chunk_n_rows
