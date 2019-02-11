@@ -2,8 +2,14 @@
 
 # A few utils functions copied from sklearn.utils
 
+from typing import Iterator, Union
 
-def gen_batches(n, batch_size, min_batch_size=0):
+Num = Union[int, float]
+
+
+def gen_batches(n: int,
+                batch_size: int,
+                min_batch_size: int = 0) -> Iterator[slice]:
     """Generator to create slices containing batch_size elements, from 0 to n.
 
     The last slice may contain less than batch_size elements, when batch_size
@@ -46,7 +52,9 @@ def gen_batches(n, batch_size, min_batch_size=0):
         yield slice(start, n)
 
 
-def get_chunk_n_rows(row_bytes, working_memory, max_n_rows=None):
+def get_chunk_n_rows(row_bytes: int,
+                     working_memory: Num,
+                     max_n_rows: int = None) -> int:
     """Calculates how many rows can be processed within working_memory
 
     Parameters

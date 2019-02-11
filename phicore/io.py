@@ -7,12 +7,14 @@ import operator
 
 from collections import namedtuple
 
+from typing import Optional, Tuple, List, Dict, Any
+
 
 __fileformatversion__ = 2
 
 
 class PhiDataFile(object):
-    def __init__(self, fullpath, mode="r", force=False):
+    def __init__(self, fullpath: str, mode: str = "r", force: bool = False):
         """Defines the structure of some archived data and methods
         associated to Input and Output.
 
@@ -31,7 +33,7 @@ class PhiDataFile(object):
 
         if mode not in ('r', 'r+', 'w', 'w+', 'a', 'a+'):
             raise ValueError('Access type {} unkown. See `open` documentation.'
-                             .format(self.mode))
+                             .format(mode))
         self.mode = mode
 
         if not os.path.exists(self.fullpath) and\
@@ -52,7 +54,8 @@ class PhiDataFile(object):
         if self.mode in ("w", "w+"):
             self._create_file()
 
-    def open(self, mode=None, backend='h5py', filters=None):
+    def open(self, mode: Optional[str] = None, backend: str = 'h5py',
+             filters=None):
         """ Open the hdf5 file
 
         Parameters
@@ -92,7 +95,7 @@ class PhiDataFile(object):
     def __exit__(self, exc_type, exc_val, exc_tb):
         return False
 
-    def _create_file(self):
+    def _create_file(self) -> None:
         """Initialize basic file structure"""
         import h5py
         with h5py.File(self.fullpath, 'w') as f:
@@ -101,7 +104,7 @@ class PhiDataFile(object):
             f.create_group('diag')
             f.attrs['rev_fileformat'] = __fileformatversion__
 
-    def create_group(self, name, location=None):
+    def create_group(self, name: str, location: Optional[str] = None):
         """ Create a new dataset see h5py.Group.create_group """
         with self.open('a') as fh:
             if location is None:
@@ -110,8 +113,15 @@ class PhiDataFile(object):
                 out = fh[location].create_group(name)
         return out
 
-    def create_dataset(self, name, data, fletcher32=True, complib='blosc:lz4',
-                       complevel=0, chunks=None, backend='pytables', **args):
+    def create_dataset(self,
+                       name: str,
+                       data,
+                       fletcher32: bool = True,
+                       complib: str = 'blosc:lz4',
+                       complevel: int = 0,
+                       chunks: bool = None,
+                       backend: str = 'pytables',
+                       **args):
         """ Create a new dataset see h5py.Group.create_dataset
 
         Parameters
@@ -156,16 +166,17 @@ class PhiDataFile(object):
             raise ValueError("Wrong backend {}".format(backend))
         return out
 
-    def write_attrs(self, attrs, location=None):
+    def write_attrs(self,
+                    attrs: dict,
+                    location: Optional[str] = None) -> None:
         """ Write attributes to a h5 node
 
         Parameters
         ----------
+        attrs : dict
+          the attributes to set
         location : str
           location path inside the hdf5
-
-        data : xarray.DataArray
-          the data to save
         """
 
         with self.open('a') as fh:
@@ -177,7 +188,8 @@ class PhiDataFile(object):
             for key, val in attrs.items():
                 fh_attrs[key] = val
 
-    def get_attrs(self, location=None):
+    def get_attrs(self,
+                  location: Optional[str] = None) -> Dict[str, Any]:
         """ Returns all attrs in specified location, as a dict.
 
         Parameters
@@ -196,7 +208,7 @@ class PhiDataFile(object):
 
             return {key: val for key, val in attrs.items()}
 
-    def list_xarray(self, location='/data/'):
+    def list_xarray(self, location: str = '/data/') -> List[str]:
         """ List valid xarrays in designated folder. Returns full path.
 
         Parameters
@@ -218,9 +230,14 @@ class PhiDataFile(object):
 
         return output_list
 
-    def write_xarray(self, data, location='/data/', chunks=None,
-                     backend='pytables', complib="blosc:lz4",
-                     complevel=0, **args):
+    def write_xarray(self,
+                     data,
+                     location: str = '/data/',
+                     chunks: bool = None,
+                     backend: str = 'pytables',
+                     complib: str = "blosc:lz4",
+                     complevel: int = 0,
+                     **args) -> None:
         """ Write an xarray to hdf5
 
         Parameters
@@ -291,8 +308,12 @@ class PhiDataFile(object):
 
                 fh[location].attrs[key] = value
 
-    def read_xarray(self, location, index=(), chunks=(),
-                    backend='h5py', mmap=False):
+    def read_xarray(self,
+                    location: str,
+                    index: Tuple[int, ...] = (),
+                    chunks: Tuple[int, ...] = (),
+                    backend: str = 'h5py',
+                    mmap: bool = False):
         """ Read an xarray from hdf5
 
         Only one of ``index``, ``chunks`` can be provided at a time.
